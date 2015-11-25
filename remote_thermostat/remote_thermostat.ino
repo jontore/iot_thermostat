@@ -3,8 +3,8 @@
 #include <DHT.h>
 #include "relayr.h"
 
-#define SSID "wifi"
-#define PASSWORD "password"
+#define SSID "lok"
+#define PASSWORD "rem1000"
 
 
 #define COOL_PIN 12
@@ -104,8 +104,6 @@ void loop() {
     if (millis() - lastPublishTime > publishingPeriod) {
       lastPublishTime = millis();
       remoteClient.publish(temp);
-      delay(500);
-      remoteClient.publish(targetTemp);
     }
   }
 
