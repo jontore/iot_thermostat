@@ -4,15 +4,15 @@
 #include "relayr.h"
 
 #define SSID "wifi"
-#define PASSWORD "my_password"
+#define PASSWORD "password"
 
 
-#define COOL_PIN 3
+#define COOL_PIN 12
 #define HEAT_PIN 2
-#define DHTPIN 7
+#define DHTPIN 13
 
-#define TEMPERATURE_CONTROL_RANGE 2
-#define COMPRESSER_DELAY 20000
+#define TEMPERATURE_CONTROL_RANGE 1
+#define COMPRESSER_DELAY 2000
 
 unsigned long lastTime = 0;
                                 
@@ -22,7 +22,7 @@ int lastCoolingTime = 0;
 
 boolean cooling = false;
 boolean heating = false;
-float targetTemp = 0.0;
+float targetTemp = 32.0;
 
 
 DHT dht;
@@ -33,12 +33,13 @@ float readTemp() {
 }
 
 void cool() {
+    lastCoolingTime = lastCoolingTime < 1 ? millis() : lastCoolingTime;
+  
    if (millis() - lastCoolingTime > COMPRESSER_DELAY) {
-     digitalWrite(COOL_PIN, HIGH);
      digitalWrite(HEAT_PIN, LOW);
-   } else {
-    lastCoolingTime = millis();
-   }
+     digitalWrite(COOL_PIN, HIGH);
+     lastCoolingTime = millis();
+   } 
 }
 
 void heat() {
@@ -48,6 +49,7 @@ void heat() {
 }
 
 void stop() {
+  lastCoolingTime = 0;
   digitalWrite(HEAT_PIN, LOW);
   digitalWrite(COOL_PIN, LOW);
 }
@@ -63,13 +65,17 @@ void control(float temp) {
   }
 };
 
-void setTargetTemp(String message) {
-  //TODO: Needs to be read from the JSON set temperature correctly
-  targetTemp = message.toFloat();
+void setTargetTemp(float message) {  
+  Serial.println("set target");
+  targetTemp = message;
 };
 
 void setup() {
-    //set 200ms as minimum publishing period
+    Serial.begin(9600);
+    
+    pinMode(HEAT_PIN, OUTPUT);
+    pinMode(COOL_PIN, OUTPUT);
+    
     publishingPeriod = publishingPeriod > 200 ? publishingPeriod : 200;
 
     remoteClient.connect(SSID, PASSWORD);
@@ -91,10 +97,16 @@ void loop() {
   } else {
     stop();
   }
-  
-  if (millis() - lastPublishTime > publishingPeriod) {
-    lastPublishTime = millis();
-    remoteClient.publish(temp);
+
+  if(remoteClient.connected()) {
+    remoteClient.loop();
+    
+    if (millis() - lastPublishTime > publishingPeriod) {
+      lastPublishTime = millis();
+      remoteClient.publish(temp);
+      delay(500);
+      remoteClient.publish(targetTemp);
+    }
   }
 
   delay(2000);

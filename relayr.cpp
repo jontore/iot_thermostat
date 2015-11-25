@@ -12,23 +12,43 @@ WiFiClient wifi;
 #define MQTT_TOPIC "/v1/d15931b6-02d6-4be7-aa53-5c62df13ea3e/"
 #define MQTT_SERVER "mqtt.relayr.io"
 
+#define DEBUG_PIN 14
+
 char message_buff[100];
 
-void callback(char* topic, byte* payload, unsigned int length);
-void (*clientCallback)(String message);
+const String command = "set_temperature";
+float commandValue;
 
-//create our mqtt client object, params are server, port, callback and wifi client
-PubSubClient client(MQTT_SERVER, 1883, callback, wifi);
+void callback(char* topic, byte* payload, unsigned int length);
+void handlePayload(char* message);
+void (*clientCallback)(float message);
+
+PubSubClient client(MQTT_SERVER, 1883, wifi);
 
 // implement our callback method thats called on receiving data
 void callback(char* topic, byte* payload, unsigned int length) {
-    //store the received payload and print it at the Serial port
-    char p[length + 1];
-    memcpy(p, payload, length);
-    p[length] = '\0';
-    String message(p);
-    (*clientCallback)(message);
-    Serial.println("Command Received: "+message);
+  char p[length + 1];
+  memcpy(p, payload, length);
+  p[length] = 0;
+  String message(p);
+  //print the topic and the payload received
+  Serial.println("topic: " + String(topic));
+  Serial.println("payload: " + message);
+  
+  handlePayload(p);
+}
+
+void handlePayload(char* message) {  
+  String msg = String(message);
+
+  int matchIndex = msg.indexOf(command);
+  if (matchIndex != -1) {
+    String value = msg.substring(39, 42);
+    char floatbuf[4];
+    value.toCharArray(floatbuf, sizeof(floatbuf));
+    float setTemp = atof(floatbuf);
+    (*clientCallback)(setTemp);
+  }
 }
 
 
@@ -58,9 +78,13 @@ void mqtt_connect() {
 }
 
 void RelayrClient::connect(char* ssid, char* password) {
+  pinMode(DEBUG_PIN, OUTPUT);
   wifi_connect(ssid, password);
 
-  mqtt_connect(); 
+  while(!client.connected()) {
+    mqtt_connect();
+    delay(2000);
+  }
 }
 
 void RelayrClient::publish(float temp) {
@@ -78,6 +102,16 @@ void RelayrClient::publish(float temp) {
 
 }
 
-void RelayrClient::connectClient(void (*clientCb)(String)) {
+void RelayrClient::connectClient(void (*clientCb)(float)) {
   clientCallback = clientCb;
+  client.setCallback(callback);
+  Serial.println("Connect client topic");
+}
+
+boolean RelayrClient::connected() {
+  return client.connected();
+}
+
+void RelayrClient::loop() {
+  client.loop();
 }

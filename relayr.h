@@ -5,8 +5,10 @@ class RelayrClient {
   public:
     RelayrClient();
     void connect(char* ssid, char* password);
-    void connectClient(void (*clientCb)(String));
+    void connectClient(void (*clientCb)(float));
     void publish(float temp);
+    boolean connected();
+    void loop();
 };
 
 
