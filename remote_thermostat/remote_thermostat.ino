@@ -5,7 +5,7 @@
 #include "relayr.h"
 
 #define SSID "ssid"
-#define PASSWORD "password"
+#define PASSWORD "pwd"
 
 #define DEFAULT_TARGET_TEMP 19
 
@@ -72,7 +72,7 @@ void control(float temp) {
 };
 
 void setTargetTemp(float message) {  
-  Serial.println("set target");
+  Serial.println("set target" + String(message));
   targetTemp = message;
   EEPROM.put(eeAddress, targetTemp);
   EEPROM.commit();
@@ -119,8 +119,14 @@ void loop() {
     
     if (millis() - lastPublishTime > publishingPeriod) {
       lastPublishTime = millis();
-      remoteClient.publish(temp);
+      remoteClient.publishTemperature(temp);
+      delay(200);
+      remoteClient.publishSetTemperature(targetTemp);
     }
+  } else {
+    Serial.println("Re connect");
+    remoteClient.connect(SSID, PASSWORD);
+    delay(4000);
   }
 
   delay(2000);
