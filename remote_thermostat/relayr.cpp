@@ -3,16 +3,16 @@
 RelayrClient::RelayrClient() {}
 
 WiFiClient wifi;
-   
+
+            
 //define your mqtt credentials
-#define DEVICE_ID "d15931b6-02d6-4be7-aa53-5c62df13ea3e" 
-#define MQTT_USER "d15931b6-02d6-4be7-aa53-5c62df13ea3e" 
-#define MQTT_PASSWORD "5ztp5Wx19MXM"
-#define MQTT_CLIENTID "T0VkxtgLWS+eqU1xi3xPqPg" //can be anything else
-#define MQTT_TOPIC "/v1/d15931b6-02d6-4be7-aa53-5c62df13ea3e/"
+#define DEVICE_ID "5abd9c5e-8ba2-4cd4-8695-a2debf8fab4b" 
+#define MQTT_USER "5abd9c5e-8ba2-4cd4-8695-a2debf8fab4b" 
+#define MQTT_PASSWORD "MQTT_PWD"
+#define MQTT_CLIENTID "TWr2cXouiTNSGlaLev4+rSw" //can be anything else
+#define MQTT_TOPIC "/v1/5abd9c5e-8ba2-4cd4-8695-a2debf8fab4b/"
 #define MQTT_SERVER "mqtt.relayr.io"
 
-#define DEBUG_PIN 14
 
 char message_buff[100];
 
