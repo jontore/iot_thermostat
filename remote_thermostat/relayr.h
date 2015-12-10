@@ -6,7 +6,8 @@ class RelayrClient {
     RelayrClient();
     void connect(char* ssid, char* password);
     void connectClient(void (*clientCb)(float));
-    void publish(float temp);
+    void publishTemperature(float temp);
+    void publishSetTemperature(float temp);
     boolean connected();
     void loop();
 };

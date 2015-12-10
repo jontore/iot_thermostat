@@ -43,7 +43,7 @@ void handlePayload(char* message) {
 
   int matchIndex = msg.indexOf(command);
   if (matchIndex != -1) {
-    String value = msg.substring(39, 42);
+    String value = msg.substring(38, 42);
     char floatbuf[4];
     value.toCharArray(floatbuf, sizeof(floatbuf));
     float setTemp = atof(floatbuf);
@@ -78,8 +78,9 @@ void mqtt_connect() {
 }
 
 void RelayrClient::connect(char* ssid, char* password) {
-  pinMode(DEBUG_PIN, OUTPUT);
-  wifi_connect(ssid, password);
+  if (WiFi.status() != WL_CONNECTED) {
+    wifi_connect(ssid, password);
+  }
 
   while(!client.connected()) {
     mqtt_connect();
@@ -87,9 +88,9 @@ void RelayrClient::connect(char* ssid, char* password) {
   }
 }
 
-void RelayrClient::publish(float temp) {
+void publish(float temp, String command) {
     //create our json payload
-    String pubString = "{\"meaning\":\"temperature\", \"value\":";
+    String pubString = "{\"meaning\":\"" + command + "\", \"value\":";
     //read and add sensor data to payload
     char tmp[20];
     dtostrf(temp, 4, 3, tmp);
@@ -102,6 +103,14 @@ void RelayrClient::publish(float temp) {
 
 }
 
+void RelayrClient::publishTemperature(float temp) {
+  publish(temp, "temperature");
+};
+
+void RelayrClient::publishSetTemperature(float temp) {
+  publish(temp, "set_temperature");
+};
+
 void RelayrClient::connectClient(void (*clientCb)(float)) {
   clientCallback = clientCb;
   client.setCallback(callback);
@@ -109,7 +118,7 @@ void RelayrClient::connectClient(void (*clientCb)(float)) {
 }
 
 boolean RelayrClient::connected() {
-  return client.connected();
+  return client.connected() && WiFi.status() == WL_CONNECTED;
 }
 
 void RelayrClient::loop() {
