@@ -43,7 +43,7 @@ void handlePayload(char* message) {
 
   int matchIndex = msg.indexOf(command);
   if (matchIndex != -1) {
-    String value = msg.substring(38, 42);
+    String value = msg.substring(199, 203);
     char floatbuf[4];
     value.toCharArray(floatbuf, sizeof(floatbuf));
     float setTemp = atof(floatbuf);
