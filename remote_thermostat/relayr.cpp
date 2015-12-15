@@ -17,7 +17,7 @@ WiFiClient wifi;
 char message_buff[100];
 
 const String command = "set_temperature";
-float commandValue;
+const String valueKey = "value\":\"";
 
 void callback(char* topic, byte* payload, unsigned int length);
 void handlePayload(char* message);
@@ -42,8 +42,10 @@ void handlePayload(char* message) {
   String msg = String(message);
 
   int matchIndex = msg.indexOf(command);
-  if (matchIndex != -1) {
-    String value = msg.substring(199, 203);
+  int valueIndex = msg.indexOf(valueKey);
+  if (matchIndex != -1 && valueIndex != -1) {
+    int valuePosition = valueIndex + valueKey.length();
+    String value = msg.substring(valuePosition, valuePosition + 2);
     char floatbuf[4];
     value.toCharArray(floatbuf, sizeof(floatbuf));
     float setTemp = atof(floatbuf);
