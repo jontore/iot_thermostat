@@ -56,10 +56,12 @@ void handlePayload(char* message) {
 
 void wifi_connect(char* ssid, char* password) {
   WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
+
+  int maxAttemts = 10;
+  while (WiFi.status() != WL_CONNECTED && maxAttemts > 0) {
     delay(500);
     Serial.print(".");
+    maxAttemts--;
   }
   
   Serial.println("");
@@ -84,7 +86,7 @@ void RelayrClient::connect(char* ssid, char* password) {
     wifi_connect(ssid, password);
   }
 
-  while(!client.connected()) {
+  if(!client.connected()) {
     mqtt_connect();
     delay(2000);
   }

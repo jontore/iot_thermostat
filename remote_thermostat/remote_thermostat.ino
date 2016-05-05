@@ -18,7 +18,7 @@
 
 unsigned long lastTime = 0;
                                 
-int publishingPeriod = 1000;
+int publishingPeriod = 10000;
 int lastPublishTime = 0;
 int lastCoolingTime = 0;
 
