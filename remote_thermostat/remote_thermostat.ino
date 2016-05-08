@@ -1,4 +1,4 @@
-#include <PubSubClient.h>
+#include <PubSubClient.h> 
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 #include <EEPROM.h>
@@ -8,9 +8,11 @@
 #define PASSWORD "pwd"
 
 #define DEFAULT_TARGET_TEMP 19
+#define MAX_TEMP 29
+#define MIN_TEMP 2
 
-#define COOL_PIN 13
-#define HEAT_PIN 14
+#define COOL_PIN 14
+#define HEAT_PIN 13
 #define DHTPIN 12
 
 #define TEMPERATURE_CONTROL_RANGE 1
@@ -32,37 +34,37 @@ DHT dht;
 RelayrClient remoteClient;
 
 float readTemp() {
-  return dht.getTemperature();
+    return dht.getTemperature();
 }
 
 void cool() {
     lastCoolingTime = lastCoolingTime < 1 ? millis() : lastCoolingTime;
   
    if (millis() - lastCoolingTime > COMPRESSER_DELAY) {
-     digitalWrite(COOL_PIN, LOW);
+     digitalWrite(COOL_PIN, HIGH);
      lastCoolingTime = millis();
    } 
    
-   digitalWrite(HEAT_PIN, HIGH);
+   digitalWrite(HEAT_PIN, LOW);
 }
 
 void heat() {
-  digitalWrite(HEAT_PIN, LOW);
-  digitalWrite(COOL_PIN, HIGH);
+  digitalWrite(HEAT_PIN, HIGH);
+  digitalWrite(COOL_PIN, LOW);
   lastCoolingTime = 0;
 }
 
 void stop() {
   lastCoolingTime = 0;
-  digitalWrite(HEAT_PIN, HIGH);
-  digitalWrite(COOL_PIN, HIGH);
+  digitalWrite(HEAT_PIN, LOW);
+  digitalWrite(COOL_PIN, LOW);
 }
 
 void control(float temp) {
-  if (temp + TEMPERATURE_CONTROL_RANGE < targetTemp) {
+  if (temp + TEMPERATURE_CONTROL_RANGE < targetTemp && targetTemp < MAX_TEMP) {
     heating = true;
     cooling = false;
-  } else if (temp - TEMPERATURE_CONTROL_RANGE > targetTemp) {
+  } else if (temp - TEMPERATURE_CONTROL_RANGE > targetTemp && targetTemp > MIN_TEMP) {
     heating = false;
     cooling = true;
   } else {
@@ -73,9 +75,11 @@ void control(float temp) {
 
 void setTargetTemp(float message) {  
   Serial.println("set target" + String(message));
-  targetTemp = message;
-  EEPROM.put(eeAddress, targetTemp);
-  EEPROM.commit();
+  if (MIN_TEMP < message < MAX_TEMP) {
+    targetTemp = message;
+    EEPROM.put(eeAddress, targetTemp);
+    EEPROM.commit();
+  }
 };
 
 void setup() {
@@ -89,8 +93,8 @@ void setup() {
     
     pinMode(HEAT_PIN, OUTPUT);
     pinMode(COOL_PIN, OUTPUT);
-    digitalWrite(HEAT_PIN, HIGH);
-    digitalWrite(COOL_PIN, HIGH);
+    digitalWrite(HEAT_PIN, LOW);
+    digitalWrite(COOL_PIN, LOW);
     
     publishingPeriod = publishingPeriod > 200 ? publishingPeriod : 200;
 
@@ -103,7 +107,8 @@ void setup() {
 
 void loop() {
   float temp = readTemp();
-
+  Serial.println("--- Control --- Temp");
+  
   control(temp);
 
   if (heating) {
@@ -118,7 +123,7 @@ void loop() {
     remoteClient.loop();
     
     if (millis() - lastPublishTime > publishingPeriod) {
-      lastPublishTime = millis();
+      lastPublishTime = millis(); 
       remoteClient.publishTemperature(temp);
       delay(200);
       remoteClient.publishSetTemperature(targetTemp);
